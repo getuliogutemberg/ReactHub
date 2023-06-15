@@ -1,7 +1,6 @@
 import * as React from 'react';
 import ReactEcharts from "echarts-for-react";
-
-
+import {  Link } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
 import Paper from "@mui/material/Paper";
 import { Typography } from "antd";
@@ -165,4 +164,260 @@ export const GraphchartCard = (props:any) => {
     </FieldCard>
     
   );
-}
+};
+
+export const ClientCard = (props:any) => {
+
+  return <Link
+                key={props.id}
+                color="black"
+                to={"/setTwin"}
+                onClick={()=>{localStorage.setItem('client_id',props.id)}}
+                style={{ margin: "10px", textDecoration: "none", color: "white",background: "" ,display:'flex',justifyContent:'center',alignItems:'start',maxHeight:"250px",maxWidth:'250px', cursor: "pointer",}}
+              > <Paper style={{
+                minHeight: "200px",
+                maxHeight: "200px",
+                width: "270px", 
+                display:'flex',
+                flexDirection:'column',
+                justifyContent:'space-between',
+                // padding:'10px'
+                }}>
+                
+                   <Typography.Title  level={5} style={{ margin: 10 }}>{props.name}</Typography.Title >
+                    <img
+                    src={props.logo}
+                    alt={props.name}
+                    className="Logo"
+                    loading="lazy"
+                    style={{width: "230px", maxHeight: "140px",margin:'auto'}}
+                    
+                    
+                    />
+                    
+                    </Paper></Link>
+};
+
+export const TwinCard = (props:any) => {
+  const [sensorKpi ,setSensorKpi] = React.useState<any>([]);
+  const [value, setValue] = React.useState(0);
+  const [twinInterval, setTwinInterval] = React.useState([0, 0]);
+
+  const option = {
+    
+
+    grid:{
+      
+    },
+    series: [
+      {
+        type: "gauge",
+        startAngle: 180,
+        endAngle: 0,
+        min: 0,
+        max:
+          parseFloat(
+            twinInterval[1] < 1 ? twinInterval[1].toFixed(2) : twinInterval[1].toFixed(0)
+          ) * 1.5,
+        splitNumber: 3,
+        animationDuration: 1000,
+        axisLine: {
+          lineStyle: {
+            width: 10,
+
+            color: [
+              [2/3, "rgba(131, 171, 81, 1)"],
+              [1, "rgba(192, 64, 64, 1)"],
+            ],
+          },
+        },
+        pointer: {
+          length: "40%",
+          width: value === 0 ? 0 : 5,
+          itemStyle: {
+            color: "black",
+          },
+          offsetCenter: [0, "-60%"],
+        },
+        axisTick: {
+          length: -5,
+          lineStyle: {
+            color: "#000",
+            width: 0.5,
+          },
+        },
+        splitLine: {
+          length: -55,
+
+          lineStyle: {
+            color: "#000",
+            width: 0,
+          },
+          color: "#000",
+        },
+        title: {
+          offsetCenter: [0, "10%"],
+          fontSize: 20,
+        },
+        detail: {
+          fontSize: 40,
+          offsetCenter: [0, "-20%"],
+          valueAnimation: true,
+          formatter: function (value: number) {
+            if (value > 99) {
+              return `${value.toFixed(0)}`;
+            }
+            if (value < 1 && value > 0) {
+              return `${value.toFixed(3)}`;
+            }
+            if (!value) {
+              return `${"0"}`;
+            }
+
+            return `${value.toFixed(2)}`;
+          },
+          color: "#000",
+        },
+        data: [
+          {
+            value: value,
+            name: sensorKpi ? sensorKpi.unit?.abbreviation : null,
+            interval: twinInterval,
+          },
+        ],
+      },
+      {
+        type: "gauge",
+        startAngle: 180,
+        endAngle: 60,
+        min: 0,
+        max: parseFloat(
+          twinInterval[1] < 1 ? twinInterval[1].toFixed(2) : twinInterval[1].toFixed(0)
+        ),
+
+        itemStyle: {
+          color: "rgba(131, 171, 81, 0.7)",
+        },
+        progress: {
+          show: true,
+          width: value === 0 ? 0 : 25,
+        },
+        pointer: {
+          show: false,
+        },
+        axisLine: {
+          show: false,
+        },
+        axisTick: {
+          show: false,
+        },
+        splitLine: {
+          show: false,
+        },
+        axisLabel: {
+          show: false,
+        },
+        detail: {
+          show: false,
+        },
+        data: [
+          {
+            value: value,
+          },
+        ],
+      },
+      {
+        type: "gauge",
+        startAngle: 60,
+        endAngle: 0,
+        min: parseFloat(
+          twinInterval[1] < 1 ? twinInterval[1].toFixed(2) : twinInterval[1].toFixed(0)
+        ),
+        max:
+          parseFloat(
+            twinInterval[1] < 1 ? twinInterval[1].toFixed(2) : twinInterval[1].toFixed(0)
+          ) * 1.5,
+        itemStyle: {
+          color: "rgba(192, 64, 64, 0.7)",
+        },
+        progress: {
+          show: true,
+          width: value === 0 ? 0 : 25,
+        },
+        pointer: {
+          show: false,
+        },
+        axisLine: {
+          show: false,
+        },
+        axisTick: {
+          show: false,
+        },
+        splitLine: {
+          show: false,
+        },
+        axisLabel: {
+          show: false,
+        },
+        detail: {
+          show: false,
+        },
+        title: {
+          offsetCenter: [0, "50%"],
+          fontSize: 15,
+        },
+        data: [
+          {
+            value: value,
+            name: sensorKpi ? (`Intervalo de referencia: \n ${twinInterval[0].toFixed(2)} - ${twinInterval[1].toFixed(2)}`):(`Kpi \n não encontrado`),
+          },
+        ],
+      },
+    ],
+  };
+  
+  React.useEffect(()=>{
+                  const id = props.id
+                  props.services.getGraphsByTwin(id).then((res:any)=>{
+                    
+                    setSensorKpi((res.data.map((option:any)=>option.y_axis_1.map((sensor:any)=>sensor.variable_type==="kpi" && sensor)).flat().filter((obj:any) => obj.variable_type === "kpi")).pop())
+                    setTwinInterval(JSON.parse((res.data.map((option:any)=>option.y_axis_1.map((sensor:any)=>sensor.variable_type==="kpi" && sensor)).flat().filter((obj:any)  => obj.variable_type === "kpi")).pop().range))
+                    props.services.fetchMonitoringHistoricData(
+                      props.api_address,
+                      JSON.parse((res.data.map((option:any)=>option.y_axis_1.map((sensor:any)=>sensor.variable_type==="kpi" && sensor)).flat().filter((obj:any)  => obj.variable_type === "kpi")).pop().number),
+                      ((res.data.map((option:any)=>option.y_axis_1.map((sensor:any)=>sensor.variable_type==="kpi" && sensor)).flat().filter((obj:any)  => obj.variable_type === "kpi")).pop().device_id),
+                      1,
+                      "days"
+                    ).then((res:any)=>{
+                      setValue(res[res.length-1].value)
+                    })
+                  })
+
+                  
+                },[])
+
+                
+
+                return <Link
+                key={props.id}
+                color="black"
+                to={'/monitoring'}
+                onClick={()=>{localStorage.setItem('twin_id',props.id)}}
+                style={{ margin: "10px", textDecoration: "none", color: "white",background: "" ,display:'flex',justifyContent:'center',alignItems:'start',maxHeight:"250px",maxWidth:'250px', cursor: "pointer",}}
+              > 
+                <Paper  style={{
+                    height: "250px",
+                    width: "270px", 
+                    // padding:'10px'
+                    }} >
+              
+                    
+    
+                    <Typography.Title  level={5} style={{ margin: 10 }}>{props.name}</Typography.Title>
+                    <ReactEcharts option={option}  style={{height: '100%', width: '100%' ,opacity:sensorKpi ? 1 : 0.3 }}/>
+                    
+                    
+                 
+                </Paper>
+              </Link>
+};
