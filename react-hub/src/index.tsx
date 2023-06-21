@@ -4,7 +4,7 @@ import {  Link } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
 import Paper from "@mui/material/Paper";
 import { Typography } from "antd";
-
+import 'moment-timezone'
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
@@ -13,6 +13,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Alert from '@mui/material/Alert';
 
 import Stack from '@mui/material/Stack';
+import moment from 'moment';
 
 
 // Delete me
@@ -26,36 +27,22 @@ export const Thing2 = (props:any) => {
 
 
 export const FieldCard = ({
-  flexGrow,
+  
   title = "Titulo",
   subtitle = "Subtitulo",
   children,
-  hidden = false,
+ 
 }:any) => {
   return (
-    // <div
-    //   style={{
-    //     display: "flex",
-    //     flexDirection: "column",
-    //     justifyContent: "space-between",
-    //     // background: "blue",
-    //     width: "30vw",
-    //     minWidth: "400px",
-    //     height: "29.5vh",
-    //     minHeight: "200px",
-    //     boxSizing: "border-box",
-    //     flexGrow: { flexGrow },
-    //     margin: "5px",
-    //   }}
-    // >
+   
     <Paper
       sx={{
-        display: !hidden ? "flex" : "none",
+        display: "flex" ,
         flexDirection: "column",
         justifyContent: "space-between",
         
         boxSizing: "border-box",
-        flexGrow: flexGrow,
+        
         margin: "5px",
       }}
     >
@@ -67,38 +54,15 @@ export const FieldCard = ({
           
         
       </div>
-      {/* <img
-          src="/logo512.png"
-          alt="Imagem"
-          style={{
-            height: "calc(100% - 56px)",
-            background: "red",
-            padding: "5px",
-            width: "100%",
-          }}
-        /> */}
+      
       {children ? (
         children
       ) : (
+        <CircularProgress color="success" />
         
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "calc(100% - 50px)",
-            // background: "red",
-            padding: "5px",
-            // width: "29vw",
-            // minWidth: "100%",
-            boxSizing: "border-box",
-          }}
-        >
-          <CircularProgress color="success" />
-        </div>
       )}
     </Paper>
-    // {/* </div> */}
+    
   );
 };
 
@@ -458,15 +422,50 @@ export const TwinCard = (props:any) => {
 };
 
 export const FieldRecomendations = (props:any) => {
-  return (
+  const [descrição,setDescricao] = React.useState('')
+  const [inicio,setInicio] = React.useState('')
+  const [atualEfi,setAtualEfi] = React.useState('')
+  const [tempo,setTempo] = React.useState( '')
+  const [twinInterval, setTwinInterval] = React.useState([])
+  
+  const [gemeo,setGemeo] = React.useState('')
 
-    props.recomendations && props.recomendations[(props.recomendations.length - 1)] ? <div
-      style={{
-        flexDirection: "column",
-        display: !props.hidden ? props.recomendations.length > 0 ? "flex" : "none" : "none",
-        flexGrow: props.flexGrow,
-      }}
-    >
+  React.useEffect(()=>{
+    
+    props.recomendations[0].sensor!==undefined && props.services.getGraphsByTwin(props.recomendations[0].sensor.digital_twin_id).then((res:any)=>{
+      
+      
+      setTwinInterval(JSON.parse((res.data.map((option:any)=>option.y_axis_1.map((sensor:any)=>sensor.variable_type==="kpi" && sensor)).flat().filter((obj:any)  => obj.variable_type === "kpi")).pop().range))
+      
+    })
+
+    
+  })
+  
+  React.useEffect(()=>{
+    props.recomendations[0].sensor !== undefined && props.services.getTwinInfoById(props.recomendations[0].sensor.digital_twin_id).then((res:any)=>{
+      console.log(res)
+      setGemeo(res.data.name)
+      
+    })
+  },[])
+
+  React.useEffect(()=>{
+    props.recomendations[0].finished ? 
+    setTempo('Duração: ' + moment.utc(moment(props.recomendations[0].last_alert_time).diff(moment(props.recomendations[0].first_alert_time))).format(' HH:mm:ss') + '.') :
+    setTempo('Duração: ' + moment.utc(moment().diff(moment(props.recomendations[0].first_alert_time))).format(' HH:mm:ss') + '.') 
+  })
+
+  React.useEffect(()=>{
+    
+    setInicio(!props.recomendations[0].finished ?  'Inicio: ' + moment(props.recomendations[0].first_alert_time).format('DD/MM/YYYY HH:mm:ss') + '.': 'Fim: ' + moment(props.recomendations[0].last_alert_time).format('DD/MM/YYYY HH:mm:ss') + '.') 
+    setAtualEfi('Útilmo valor: ' + parseFloat(props.recomendations[0].last_value).toFixed(2) + ' ' + props.recomendations[0].sensor.unit.abbreviation + '.')
+    parseFloat(props.recomendations[0].last_value) > twinInterval[1] ? 
+    props.recomendations[0].finished ? setDescricao(props.recomendations[0].sensor.name + ' ficou fora do intervalo aceitavel.') : setDescricao(props.recomendations[0].sensor.name + ' fora do intervalo aceitavel.') 
+    : parseFloat(props.recomendations[0].first_value) < twinInterval[1] && setDescricao(props.recomendations[0].sensor.name + ' dentro do intervalo aceitavel.') 
+  })
+
+  return (
       <Accordion disabled={false}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
@@ -474,32 +473,79 @@ export const FieldRecomendations = (props:any) => {
           id="panel1a-header"
           style={{boxSizing: 'border-box',height: '50px',padding:0}}
         >
-          <Alert variant={props.recomendations[props.recomendations.length-1].variant} severity={props.recomendations[props.recomendations.length-1].severity} style={{display: 'flex', justifyContent: 'start', alignItems: 'center',background:'',flexGrow:1}}>
-            { props.recomendations[props.recomendations.length-1].title } { props.recomendations[props.recomendations.length-1].subtitle }
+          <Alert variant={'filled'} severity={props.recomendations[0].finished? 'success':'error'} style={{display: 'flex', justifyContent: 'start', alignItems: 'center',background:'',flexGrow:1}}>
+            <Typography.Title level={5} style={{backgroundColor: 'blue',fontWeight: 'bold',maxWidth: 'content',padding: '3px',borderRadius:'3px'}}>{gemeo}</Typography.Title> <Typography.arguments>{descrição} {inicio} {atualEfi} {tempo} </Typography.arguments>
           </Alert>
-          
-          {/* <Typography>Notificacoes</Typography> */}
-          {/* <Alert variant="filled" severity="error" style={{display: 'flex', justifyContent: 'start', alignItems: 'center',background:'',flexGrow:1}}> */}
-          {/* <AlertTitle>Error</AlertTitle> */}
-  {/* This is an error alert — <strong>check it out!</strong>
-          </Alert> */}
+
         </AccordionSummary>
         <AccordionDetails>
-        <Stack sx={{ width: '100%' }} spacing={2}>
-          {props.recomendations.map((recomendation:any , index:number)=> {
-            
-            return (
-             index !== props.recomendations.length -1 && <Alert variant={recomendation.variant} severity={recomendation.severity} style={{display: 'flex', justifyContent: 'start', alignItems: 'center',background:'',flexGrow:1}}>
-            { recomendation.title } { recomendation.subtitle }
+          <Stack sx={{ width: '100%' }} spacing={2}>
+            {props.recomendations.length > 0 && props.recomendations.map((recomendation:any , index:number)=> {
+              
+
+const [descriçãoAccordionDetails,setDescricaoAccordionDetails] = React.useState('')
+const [inicioAccordionDetails,setInicioAccordionDetails] = React.useState('')
+const [atualEfiAccordionDetails,setAtualEfiAccordionDetails] = React.useState('')
+const [tempoAccordionDetails,setTempoAccordionDetails] = React.useState( '')
+// const [twinIntervalAccordionDetails, setTwinIntervalAccordionDetails] = React.useState([])
+
+const [gemeoAccordionDetails,setGemeoAccordionDetails] = React.useState('')
+
+React.useEffect(()=>{
+  console.log(recomendation,index)
+  setDescricaoAccordionDetails('')
+  setInicioAccordionDetails('')
+  setAtualEfiAccordionDetails('')
+  setTempoAccordionDetails('')
+  setGemeoAccordionDetails('')
+},[])
+
+// React.useEffect(()=>{
+  
+//   recomendation[recomendation.length-1] !==undefined && props.services.getGraphsByTwin(recomendation[recomendation.length-1].sensor.digital_twin_id).then((res:any)=>{
+    
+    
+//     setTwinInterval(JSON.parse((res.data.map((option:any)=>option.y_axis_1.map((sensor:any)=>sensor.variable_type==="kpi" && sensor)).flat().filter((obj:any)  => obj.variable_type === "kpi")).pop().range))
+    
+//   })
+
+  
+// })
+
+// React.useEffect(()=>{
+//   recomendation[recomendation.length-1] !== undefined && props.services.getTwinInfoById(recomendation[recomendation.length-1].sensor.digital_twin_id).then((res:any)=>{
+//     console.log(res)
+//     setGemeo(res.data.name)
+    
+//   })
+// },[])
+
+// React.useEffect(()=>{
+//   recomendation[recomendation.length-1].finished ? 
+//   setTempo('Tempo decorrido:' + moment.utc(moment(recomendation[recomendation.length-1].first_alert_time).diff(recomendation[recomendation.length-1].last_alert_time)).format('DD HH mm ss') ) :
+//   setTempo('Tempo decorrido:' + moment.utc(moment(recomendation[recomendation.length-1].first_alert_time).diff(moment())).format('DD HH mm ss') ) 
+// })
+
+// React.useEffect(()=>{
+//   setInicio(moment.utc(recomendation[recomendation.length-1].first_alert_time).format('DD/MM/YYYY HH:mm:ss'))
+//   setAtualEfi('Útilma eficiência :' + recomendation[recomendation.length-1].last_value)
+//   parseInt(recomendation[recomendation.length-1].last_value) > twinInterval[1] ? 
+//   recomendation[recomendation.length-1].finished ? setDescricao('Eficiência do consumo de Gás Natural ficou fora do intervalo aceitavel') : setDescricao('Eficiência do consumo de Gás Natural fora do intervalo aceitavel') 
+//   : parseInt(recomendation[recomendation.length-1].first_value) < twinInterval[1] && setDescricao('Eficiência do consumo de Gás Natural dentro do intervalo aceitavel') 
+// })
+              
+              return (
+              index !== recomendation.length -1 && 
+              <Alert variant={'filled'} severity={true ? 'success':'error'} style={{display: 'flex', justifyContent: 'start', alignItems: 'center',background:'',flexGrow:1}}>
+            { gemeoAccordionDetails } {descriçãoAccordionDetails} {inicioAccordionDetails} {atualEfiAccordionDetails} {tempoAccordionDetails} 
           </Alert>
-            );
-          }).reverse()}
+              );
+            }).splice(0,6).reverse()}
             
-       
           </Stack>
         </AccordionDetails>
       </Accordion>
-    </div> : <div></div>
+    
   );
 };
 
