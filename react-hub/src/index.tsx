@@ -474,12 +474,12 @@ export const FieldRecomendations = (props:any) => {
           style={{boxSizing: 'border-box',height: '50px',padding:0}}
         >
           <Alert variant={'filled'} severity={props.recomendations[0].finished? 'success':'error'} style={{display: 'flex', justifyContent: 'start', alignItems: 'center',background:'',flexGrow:1}}>
-            <div style={{display:'flex'}}><Typography.Title level={5} style={{backgroundColor: 'blue',fontWeight: 'bold',maxWidth: 'content',padding: '3px',borderRadius:'3px'}}>{gemeo}</Typography.Title> {descrição} {inicio} {atualEfi} {tempo}</div>
+            <div style={{display: 'flex', alignItems: 'center'}}> {gemeo} {descrição} {inicio} {atualEfi} {tempo}</div>
           </Alert>
 
         </AccordionSummary>
         <AccordionDetails>
-          <Stack sx={{ width: '100%' }} spacing={2}>
+          <Stack sx={{ width: '500px',overflow: 'auto' }} spacing={2}>
             {props.recomendations.length > 0 && props.recomendations.map((recomendation:any , index:number)=> {
               
 
@@ -492,55 +492,31 @@ const [tempoAccordionDetails,setTempoAccordionDetails] = React.useState( '')
 const [gemeoAccordionDetails,setGemeoAccordionDetails] = React.useState('')
 
 React.useEffect(()=>{
-  console.log(recomendation,index)
-  setDescricaoAccordionDetails('')
-  setInicioAccordionDetails('')
-  setAtualEfiAccordionDetails('')
-  setTempoAccordionDetails('')
-  setGemeoAccordionDetails('')
+  // console.log(recomendation,index)
+  parseFloat(recomendation.last_value) > twinInterval[1] ? 
+  recomendation.finished ? setDescricaoAccordionDetails(recomendation.sensor.name + ' ficou fora do intervalo aceitavel.') : setDescricaoAccordionDetails(recomendation.sensor.name + ' fora do intervalo aceitavel.') 
+  : parseFloat(recomendation.first_value) < twinInterval[1] && setDescricaoAccordionDetails(recomendation.sensor.name + ' dentro do intervalo aceitavel.') 
+  setInicioAccordionDetails(!recomendation.finished ?  'Inicio: ' + moment(recomendation.first_alert_time).format('DD/MM/YYYY HH:mm:ss') + '.': 'Fim: ' + moment(recomendation.last_alert_time).format('DD/MM/YYYY HH:mm:ss') + '.') 
+  setAtualEfiAccordionDetails('Útilmo valor: ' + parseFloat(recomendation.last_value).toFixed(2) + ' ' + recomendation.sensor.unit.abbreviation + '.')
+  recomendation.finished ? 
+  setTempoAccordionDetails('Duração: ' + moment.utc(moment(recomendation.last_alert_time).diff(moment(recomendation.first_alert_time))).format(' HH:mm:ss') + '.') :
+  setTempoAccordionDetails('Duração: ' + moment.utc(moment().diff(moment(recomendation.first_alert_time))).format(' HH:mm:ss') + '.') 
+  recomendation.sensor !== undefined && props.services.getTwinInfoById(recomendation.sensor.digital_twin_id).then((res:any)=>{
+    console.log(res)
+    setGemeoAccordionDetails(res.data.name)
+    
+  })
+  
 },[])
 
-// React.useEffect(()=>{
-  
-//   recomendation[recomendation.length-1] !==undefined && props.services.getGraphsByTwin(recomendation[recomendation.length-1].sensor.digital_twin_id).then((res:any)=>{
-    
-    
-//     setTwinInterval(JSON.parse((res.data.map((option:any)=>option.y_axis_1.map((sensor:any)=>sensor.variable_type==="kpi" && sensor)).flat().filter((obj:any)  => obj.variable_type === "kpi")).pop().range))
-    
-//   })
 
-  
-// })
-
-// React.useEffect(()=>{
-//   recomendation[recomendation.length-1] !== undefined && props.services.getTwinInfoById(recomendation[recomendation.length-1].sensor.digital_twin_id).then((res:any)=>{
-//     console.log(res)
-//     setGemeo(res.data.name)
-    
-//   })
-// },[])
-
-// React.useEffect(()=>{
-//   recomendation[recomendation.length-1].finished ? 
-//   setTempo('Tempo decorrido:' + moment.utc(moment(recomendation[recomendation.length-1].first_alert_time).diff(recomendation[recomendation.length-1].last_alert_time)).format('DD HH mm ss') ) :
-//   setTempo('Tempo decorrido:' + moment.utc(moment(recomendation[recomendation.length-1].first_alert_time).diff(moment())).format('DD HH mm ss') ) 
-// })
-
-// React.useEffect(()=>{
-//   setInicio(moment.utc(recomendation[recomendation.length-1].first_alert_time).format('DD/MM/YYYY HH:mm:ss'))
-//   setAtualEfi('Útilma eficiência :' + recomendation[recomendation.length-1].last_value)
-//   parseInt(recomendation[recomendation.length-1].last_value) > twinInterval[1] ? 
-//   recomendation[recomendation.length-1].finished ? setDescricao('Eficiência do consumo de Gás Natural ficou fora do intervalo aceitavel') : setDescricao('Eficiência do consumo de Gás Natural fora do intervalo aceitavel') 
-//   : parseInt(recomendation[recomendation.length-1].first_value) < twinInterval[1] && setDescricao('Eficiência do consumo de Gás Natural dentro do intervalo aceitavel') 
-// })
-              
               return (
-              index !== recomendation.length -1 && 
-              <Alert variant={'filled'} severity={true ? 'success':'error'} style={{display: 'flex', justifyContent: 'start', alignItems: 'center',background:'',flexGrow:1}}>
-            { gemeoAccordionDetails } {descriçãoAccordionDetails} {inicioAccordionDetails} {atualEfiAccordionDetails} {tempoAccordionDetails} 
+              index !== 0 && 
+              <Alert variant={'filled'} severity={recomendation.finished ? 'success':'error'} style={{display: 'flex', justifyContent: 'start', alignItems: 'center',background:'',flexGrow:1}}>
+            <div style={{display: 'flex', alignItems: 'center'}}> { gemeoAccordionDetails } {descriçãoAccordionDetails} {inicioAccordionDetails} {atualEfiAccordionDetails} {tempoAccordionDetails} </div>
           </Alert>
               );
-            }).splice(0,6).reverse()}
+            }).reverse()}
             
           </Stack>
         </AccordionDetails>
