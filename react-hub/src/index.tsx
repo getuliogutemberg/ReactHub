@@ -478,8 +478,8 @@ export const FieldRecomendations = (props:any) => {
           </Alert>
 
         </AccordionSummary>
-        <AccordionDetails>
-          <Stack sx={{ width: '500px',overflow: 'auto' }} spacing={2}>
+        <AccordionDetails style={{ maxHeight: '50%',overflow: 'auto' }}>
+          <Stack spacing={2}>
             {props.recomendations.length > 0 && props.recomendations.map((recomendation:any , index:number)=> {
               
 
@@ -513,10 +513,10 @@ React.useEffect(()=>{
               return (
               index !== 0 && 
               <Alert variant={'filled'} severity={recomendation.finished ? 'success':'error'} style={{display: 'flex', justifyContent: 'start', alignItems: 'center',background:'',flexGrow:1}}>
-            <div style={{display: 'flex', alignItems: 'center'}}> { gemeoAccordionDetails } {descriçãoAccordionDetails} {inicioAccordionDetails} {atualEfiAccordionDetails} {tempoAccordionDetails} </div>
-          </Alert>
+                <div style={{display: 'flex', alignItems: 'center'}}> { gemeoAccordionDetails } {descriçãoAccordionDetails} {inicioAccordionDetails} {atualEfiAccordionDetails} {tempoAccordionDetails} </div>
+              </Alert>
               );
-            }).reverse()}
+            })}
             
           </Stack>
         </AccordionDetails>
