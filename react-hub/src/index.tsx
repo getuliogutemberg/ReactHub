@@ -5,6 +5,16 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Paper from "@mui/material/Paper";
 import { Typography } from "antd";
 
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import Alert from '@mui/material/Alert';
+
+import Stack from '@mui/material/Stack';
+
+
 // Delete me
 export const Thing = () => {
   return <div>coisa 1</div>;
@@ -44,9 +54,6 @@ export const FieldCard = ({
         flexDirection: "column",
         justifyContent: "space-between",
         
-        minWidth: "250px",
-
-        minHeight: "50px",
         boxSizing: "border-box",
         flexGrow: flexGrow,
         margin: "5px",
@@ -97,20 +104,49 @@ export const FieldCard = ({
 
 export const GraphchartCard = (props:any) => {
   // const [ chartType, setChartType ] = React.useState<any>();
-  const [ gemeo,setGemeo] = React.useState<any>();
-  const [ apiAddress,setApiAddress] = React.useState<any>();
-  const [ sensores, setSensores ] = React.useState<any>();
+  // const [ gemeo,setGemeo] = React.useState<any>();
+  // const [ apiAddress,setApiAddress] = React.useState<any>();
+  // const [ sensores, setSensores ] = React.useState<any>();
   const [ option, setOption] = React.useState<any>({})
-
-  React.useEffect(() => {
-    console.log(gemeo,apiAddress,sensores);
-  },[]);
+  const [ values , setValues ] = React.useState<any>([])
+  const [ categories, setCategories ] = React.useState<any>([])
   
   React.useEffect(() => {
     // setChartType(props.chartType)
-    setGemeo(props.gemeo)
-    setApiAddress(props.api_address)
-    setSensores(props.sensores)
+    // console.log(props.gemeo)
+    // console.log(props.api_address)
+    // console.log(props.sensores)
+    props.sensores !== undefined && props.services.getTwinInfoById(props.gemeo).then((res:any) => {
+      // console.log(res.data.api_address)
+      props.services.fetchMonitoringHistoricData(res.data.api_address,
+        props.sensores[0].id,
+        props.sensores[0].device_id,
+        2,
+        'days').then((res:any) => {
+          // console.log(props.sensores[0].name)
+          // console.log(res)
+           return res.map((data:any) => {
+            // setValues((values:any) => [...values, (data.value)])
+            // setCategories((categories:any) => [...categories, String(new Date(data.timestamp).getDate()).padStart(2, "0") + "/" + String(new Date(data.timestamp).getMonth() + 1).padStart(2, "0") + "/" + String(new Date(data.timestamp).getFullYear())])
+            return {
+              value: data.value,
+              time: String(new Date(data.timestamp).getDate()).padStart(2, "0") + "/" + String(new Date(data.timestamp).getMonth() + 1).padStart(2, "0") + "/" + String(new Date(data.timestamp).getFullYear() + "-" + String(new Date(data.timestamp).getHours()).padStart(2, "0") + ":" + String(new Date(data.timestamp).getMinutes()).padStart(2, "0"))
+            }
+          })
+        }).then ((dataFormated:any) => {
+          setValues(dataFormated.map((data:any) => data.value))
+          setCategories(dataFormated.map((data:any) => data.time))
+        })
+    })
+    
+    // setCategories(['01/02/2023', '02/02/2023', '03/02/2023', '04/02/2023', '05/02/2023', '06/02/2023', '07/02/2023'])
+    // setValues([120, 200, 150, 80, 70, 110, 130])
+    
+  },[])
+
+  
+  React.useEffect(() => {
+
     setOption({
       tooltip: {
         
@@ -133,33 +169,32 @@ export const GraphchartCard = (props:any) => {
         
         feature: {
             // dataView: {show: true, readOnly: false},
-            magicType: {show: true, type: ['line', 'bar','pie','gauge','candlestick','funnel']},
-            restore: {show: true},
+            // magicType: {show: true, type: ['line', 'bar','pie','gauge','candlestick','funnel']},
+            // restore: {show: true},
             saveAsImage: {show: true}
         }
     },
       xAxis: {
         type: 'category',
-        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        data: categories
       },
       yAxis: {
         type: 'value'
       },
       series: [
         {
-          data: [120, 200, 150, 80, 70, 110, 130],
-          type: 'bar'
+          type: props.chartType,
+          data: values,
         }
       ]
     })
-    }
-      ,[])
 
+  })
   
 
   return (
     <FieldCard flexGrow={props.flexGrow} hidden={props.hidden} title={props.title} subtitle={props.subtitle}>
-            <ReactEcharts option={option} style={{flexGrow:1,border:'',justifyContent:'stretch',alignItems:'center',display:'flex',flexDirection:'column',margin:'0px',padding:'0px'}}/>
+            <ReactEcharts option={option} style={{flexGrow:1,border:'',justifyContent:'stretch',alignItems:'center',display:'flex',flexDirection:'row',margin:'0px',padding:'0px'}}/>
 
     </FieldCard>
     
@@ -421,3 +456,51 @@ export const TwinCard = (props:any) => {
                 </Paper>
               </Link>
 };
+
+export const FieldRecomendations = (props:any) => {
+  return (
+
+    props.recomendations && props.recomendations[(props.recomendations.length - 1)] ? <div
+      style={{
+        flexDirection: "column",
+        display: !props.hidden ? props.recomendations.length > 0 ? "flex" : "none" : "none",
+        flexGrow: props.flexGrow,
+      }}
+    >
+      <Accordion disabled={false}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="panel1a-content"
+          id="panel1a-header"
+          style={{boxSizing: 'border-box',height: '50px',padding:0}}
+        >
+          <Alert variant={props.recomendations[props.recomendations.length-1].variant} severity={props.recomendations[props.recomendations.length-1].severity} style={{display: 'flex', justifyContent: 'start', alignItems: 'center',background:'',flexGrow:1}}>
+            { props.recomendations[props.recomendations.length-1].title } { props.recomendations[props.recomendations.length-1].subtitle }
+          </Alert>
+          
+          {/* <Typography>Notificacoes</Typography> */}
+          {/* <Alert variant="filled" severity="error" style={{display: 'flex', justifyContent: 'start', alignItems: 'center',background:'',flexGrow:1}}> */}
+          {/* <AlertTitle>Error</AlertTitle> */}
+  {/* This is an error alert — <strong>check it out!</strong>
+          </Alert> */}
+        </AccordionSummary>
+        <AccordionDetails>
+        <Stack sx={{ width: '100%' }} spacing={2}>
+          {props.recomendations.map((recomendation:any , index:number)=> {
+            
+            return (
+             index !== props.recomendations.length -1 && <Alert variant={recomendation.variant} severity={recomendation.severity} style={{display: 'flex', justifyContent: 'start', alignItems: 'center',background:'',flexGrow:1}}>
+            { recomendation.title } { recomendation.subtitle }
+          </Alert>
+            );
+          }).reverse()}
+            
+       
+          </Stack>
+        </AccordionDetails>
+      </Accordion>
+    </div> : <div></div>
+  );
+};
+
+
