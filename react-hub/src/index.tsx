@@ -474,7 +474,7 @@ export const FieldRecomendations = (props:any) => {
           style={{boxSizing: 'border-box',height: '50px',padding:0}}
         >
           <Alert variant={'filled'} severity={props.recomendations[0].finished? 'success':'error'} style={{display: 'flex', justifyContent: 'start', alignItems: 'center',background:'',flexGrow:1}}>
-            <Typography.Title level={5} style={{backgroundColor: 'blue',fontWeight: 'bold',maxWidth: 'content',padding: '3px',borderRadius:'3px'}}>{gemeo}</Typography.Title> <Typography.arguments>{descrição} {inicio} {atualEfi} {tempo} </Typography.arguments>
+            <div style={{display:'flex'}}><Typography.Title level={5} style={{backgroundColor: 'blue',fontWeight: 'bold',maxWidth: 'content',padding: '3px',borderRadius:'3px'}}>{gemeo}</Typography.Title> {descrição} {inicio} {atualEfi} {tempo}</div>
           </Alert>
 
         </AccordionSummary>
