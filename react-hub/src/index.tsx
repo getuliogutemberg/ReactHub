@@ -165,6 +165,169 @@ export const GraphchartCard = (props:any) => {
   );
 };
 
+export const GraphchartCardMultiUnit = (props:any) => {
+  // const [ chartType, setChartType ] = React.useState<any>();
+  // const [ gemeo,setGemeo] = React.useState<any>();
+  // const [ apiAddress,setApiAddress] = React.useState<any>();
+  // const [ sensores, setSensores ] = React.useState<any>();
+  const [ option, setOption] = React.useState<any>({})
+  // const [ values , setValues ] = React.useState<any>([])
+  // const [ categories, setCategories ] = React.useState<any>([])
+  
+  React.useEffect(() => {
+    // setChartType(props.chartType)
+    // console.log(props.gemeo)
+    // console.log(props.api_address)
+    // console.log(props.sensores)
+    props.sensores !== undefined && props.services.getTwinInfoById(props.gemeo).then((res:any) => {
+      // console.log(res.data.api_address)
+      props.services.fetchMonitoringHistoricData(res.data.api_address,
+        props.sensores[0].id,
+        props.sensores[0].device_id,
+        2,
+        'days').then((res:any) => {
+          // console.log(props.sensores[0].name)
+          // console.log(res)
+           return res.map((data:any) => {
+            // setValues((values:any) => [...values, (data.value)])
+            // setCategories((categories:any) => [...categories, String(new Date(data.timestamp).getDate()).padStart(2, "0") + "/" + String(new Date(data.timestamp).getMonth() + 1).padStart(2, "0") + "/" + String(new Date(data.timestamp).getFullYear())])
+            return {
+              value: data.value,
+              time: String(new Date(data.timestamp).getDate()).padStart(2, "0") + "/" + String(new Date(data.timestamp).getMonth() + 1).padStart(2, "0") + "/" + String(new Date(data.timestamp).getFullYear() + "-" + String(new Date(data.timestamp).getHours()).padStart(2, "0") + ":" + String(new Date(data.timestamp).getMinutes()).padStart(2, "0"))
+            }
+          })
+        })
+        // .then ((dataFormated:any) => {
+          // setValues(dataFormated.map((data:any) => data.value))
+          // setCategories(dataFormated.map((data:any) => data.time))
+        // })
+    })
+    
+    // setCategories(['01/02/2023', '02/02/2023', '03/02/2023', '04/02/2023', '05/02/2023', '06/02/2023', '07/02/2023'])
+    // setValues([120, 200, 150, 80, 70, 110, 130])
+    
+  },[])
+
+  
+  React.useEffect(() => {
+   
+    
+    setOption({
+      grid: {
+        top: 50,
+        left: 50,
+        right: 50,
+        bottom: 30,
+        // height: '100vh',
+      },
+      tooltip: {
+        
+          
+      
+        
+          trigger: 'axis',
+          axisPointer: {
+              type: 'cross',
+              crossStyle: {
+                  color: '#999'
+              }
+          }
+      },
+      toolbox: {
+          feature: {
+              dataView: {show: true, readOnly: false},
+              magicType: {show: true, type: ['line', 'bar']},
+              restore: {show: true},
+              saveAsImage: {show: true}
+          }
+      },
+      legend: {
+          data: ['蒸发量', '降水量', '平均温度']
+      },
+      xAxis: [
+        
+          {
+              type: 'category',
+              data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+              axisPointer: {
+                
+                snap: true,
+                label: {
+                  show: true,
+                  
+                },}
+          }
+      ],
+      yAxis: [
+          {
+              type: 'value',
+              name: 'ml',
+              min: 0,
+              max: 250,
+              interval: 50,
+              axisLabel: {
+                  formatter: '{value} ml'
+              }
+              
+          },
+          {
+              type: 'value',
+              name: '温度',
+              min: 0,
+              max: 25,
+              interval: 5,
+              axisLabel: {
+                
+                  formatter: '{value} °C'
+              }
+          },
+          {
+              offset:60,
+              type: 'value',
+              name: 'metro',
+              min: 0,
+              max: 900,
+              interval: 50,
+              axisLabel: {
+                  formatter: '{value} m'
+              }
+          }
+      ],
+      series: [
+          {
+              name: '蒸发量',
+              type: 'bar',
+              data: [2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6, 162.2, 32.6, 20.0, 6.4, 3.3]
+          },
+          {
+              name: '降水量',
+              type: 'bar',
+              data: [2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6, 182.2, 48.7, 18.8, 6.0, 2.3]
+          },
+          {
+              name: '平均温度',
+              type: 'line',
+              yAxisIndex: 1,
+              data: [2.0, 2.2, 3.3, 4.5, 6.3, 10.2, 20.3, 23.4, 23.0, 16.5, 12.0, 6.2]
+          }
+      ]
+    
+    } )
+
+  })
+  
+
+  return (
+    <FieldCard flexGrow={props.flexGrow} hidden={props.hidden} title={props.title} subtitle={props.subtitle}>
+            <ReactEcharts option={option} style={{flexGrow:1,border:'',justifyContent:'stretch',alignItems:'center',display:'flex',flexDirection:'row',margin:'0px',padding:'0px'}}/>
+
+    </FieldCard>
+    
+  );
+};
+
+
+
 export const ClientCard = (props:any) => {
 
   return <Link
